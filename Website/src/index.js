@@ -15,7 +15,7 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-const docRef = doc(db, "data","yo");
+const docRef = doc(db, "data","test");
 const docSnap = await getDoc(docRef);
 
 if (docSnap.exists()) {
