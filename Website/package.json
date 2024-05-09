@@ -1,0 +1,21 @@
+{
+  "dependencies": {
+    "firebase": "^10.11.0"
+  },
+  "name": "website",
+  "version": "1.0.0",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "start": "tsc --watch",
+    "build": "tsc"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "devDependencies": {
+    "@types/firebase": "^3.2.1",
+    "typescript": "^5.4.5"
+  }
+}
