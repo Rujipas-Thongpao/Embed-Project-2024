@@ -26,11 +26,6 @@ export default {
   components:{
     LineChart
   },
-  // data () {
-  //   return {
-  //     somevar :this.values
-  //   }
-  // },
   props: {
     imageUrl: {
       type: String,
@@ -67,5 +62,3 @@ export default {
 }
 </script>
 
-<style scoped>
-</style>
