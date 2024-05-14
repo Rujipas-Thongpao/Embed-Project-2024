@@ -1,0 +1,27 @@
+[
+  {
+    "id" : 1,
+    "description" : "Settled Fine",
+    "imgPath" : "./logo.png"
+  },
+  {
+    "id" : 2,
+    "description" : "Settled Fine",
+    "imgPath" : "./logo.png"
+  },
+  {
+    "id" : 3,
+    "description" : "Settled Fine",
+    "imgPath" : "./logo.png"
+  },
+  {
+    "id" : 4,
+    "description" : "Settled Fine",
+    "imgPath" : "./logo.png"
+  },
+  {
+    "id" : 5,
+    "description" : "Settled Fine",
+    "imgPath" : "./logo.png"
+  }
+]
