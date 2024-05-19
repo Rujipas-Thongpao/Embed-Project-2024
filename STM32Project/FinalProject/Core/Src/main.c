@@ -21,6 +21,7 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
+#include "bmp280.h"
 #include "DHT.h"
 #include "string.h"
 #include "stdio.h"
@@ -42,6 +43,8 @@
 /* USER CODE END PM */
 
 /* Private variables ---------------------------------------------------------*/
+I2C_HandleTypeDef hi2c2;
+
 TIM_HandleTypeDef htim3;
 
 UART_HandleTypeDef huart1;
@@ -57,6 +60,7 @@ static void MX_GPIO_Init(void);
 static void MX_USART2_UART_Init(void);
 static void MX_USART1_UART_Init(void);
 static void MX_TIM3_Init(void);
+static void MX_I2C2_Init(void);
 /* USER CODE BEGIN PFP */
 
 /* USER CODE END PFP */
@@ -64,11 +68,18 @@ static void MX_TIM3_Init(void);
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
 
+BMP280_HandleTypedef bmp280;
+
+float pressure, temperature, humidity;
+
+uint16_t size;
+uint8_t Data[256];
+
 /* DEFINE THE DHT DataTypedef
 * Look in the DHT.h for the definition
 */
-DHT_DataTypedef DHT11_Data;
-float Temperature, Humidity;
+DHT_DataTypedef DHT22_Data;
+float DHT_temperature, DHT_humidity;
 char uartData[50];
 
 void SendDataToNodeMCU() {
@@ -110,8 +121,20 @@ int main(void)
   MX_USART2_UART_Init();
   MX_USART1_UART_Init();
   MX_TIM3_Init();
+  MX_I2C2_Init();
   /* USER CODE BEGIN 2 */
+  	bmp280_init_default_params(&bmp280.params);
+  	bmp280.addr = BMP280_I2C_ADDRESS_0;
+  	bmp280.i2c = &hi2c2;
 
+  	while (!bmp280_init(&bmp280, &bmp280.params)) {
+  		size = sprintf((char *)Data, "BMP280 initialization failed\r\n");
+  		HAL_UART_Transmit(&huart2, Data, size, 1000);
+  		HAL_Delay(2000);
+  	}
+  	bool bme280p = bmp280.id == BME280_CHIP_ID;
+  	size = sprintf((char *)Data, "BMP280: found %s\r\n", bme280p ? "BME280" : "BMP280");
+  	HAL_UART_Transmit(&huart2, Data, size, 1000);
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -121,13 +144,39 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
-	  DHT_GetData(&DHT11_Data);
-  	  Temperature = DHT11_Data.Temperature/10;
-	  Humidity = DHT11_Data.Humidity/10;
-		sprintf(uartData, "\r\nTemp (C) =\t %.1f\r\nHumidity (%%) =\t %.1f%%\r\n", Temperature, Humidity);
-		SendDataToNodeMCU();
-		HAL_UART_Transmit(&huart2, (uint8_t *)uartData, strlen(uartData), 10);
-	  HAL_Delay(3000);
+
+	// GET DATA FROM DHT22
+	DHT_GetData(&DHT22_Data);
+  	DHT_temperature = DHT22_Data.Temperature/10;
+	DHT_humidity = DHT22_Data.Humidity/10;
+	sprintf(uartData, "\r\nTemp (C) =\t %.1f\r\nHumidity (%%) =\t %.1f%%\r\n", DHT_temperature, DHT_humidity);
+	HAL_UART_Transmit(&huart2, (uint8_t *)uartData, strlen(uartData), 10);
+
+//	HAL_Delay(1000); // WAIT
+//
+//	// GET DATA FROM BMP-280
+//	while (!bmp280_read_float(&bmp280, &temperature, &pressure, &humidity)) {
+//		size = sprintf((char *)Data,
+//				"Temperature/pressure reading failed\r\n");
+//		HAL_UART_Transmit(&huart2, Data, size, 1000);
+//		HAL_Delay(2000);
+//	}
+//
+//	size = sprintf((char *)Data,"Pressure: %.2f Pa, Temperature: %.2f C",
+//			pressure, temperature);
+//	HAL_UART_Transmit(&huart2, Data, size, 1000);
+//	if (bme280p) {
+//		size = sprintf((char *)Data,", Humidity: %.2f\r\n", humidity);
+//		HAL_UART_Transmit(&huart2, Data, size, 1000);
+//	}
+//
+//	else {
+//		size = sprintf((char *)Data, "\r\n");
+//		HAL_UART_Transmit(&huart2, Data, size, 1000);
+//	}
+
+	SendDataToNodeMCU();
+	HAL_Delay(3000);
   }
   /* USER CODE END 3 */
 }
@@ -149,11 +198,10 @@ void SystemClock_Config(void)
   /** Initializes the RCC Oscillators according to the specified parameters
   * in the RCC_OscInitTypeDef structure.
   */
-  RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSI;
-  RCC_OscInitStruct.HSIState = RCC_HSI_ON;
-  RCC_OscInitStruct.HSICalibrationValue = RCC_HSICALIBRATION_DEFAULT;
+  RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSE;
+  RCC_OscInitStruct.HSEState = RCC_HSE_ON;
   RCC_OscInitStruct.PLL.PLLState = RCC_PLL_ON;
-  RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_HSI;
+  RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_HSE;
   RCC_OscInitStruct.PLL.PLLM = 8;
   RCC_OscInitStruct.PLL.PLLN = 100;
   RCC_OscInitStruct.PLL.PLLP = RCC_PLLP_DIV2;
@@ -172,10 +220,44 @@ void SystemClock_Config(void)
   RCC_ClkInitStruct.APB1CLKDivider = RCC_HCLK_DIV2;
   RCC_ClkInitStruct.APB2CLKDivider = RCC_HCLK_DIV1;
 
-  if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_3) != HAL_OK)
+  if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_1) != HAL_OK)
   {
     Error_Handler();
   }
+}
+
+/**
+  * @brief I2C2 Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_I2C2_Init(void)
+{
+
+  /* USER CODE BEGIN I2C2_Init 0 */
+
+  /* USER CODE END I2C2_Init 0 */
+
+  /* USER CODE BEGIN I2C2_Init 1 */
+
+  /* USER CODE END I2C2_Init 1 */
+  hi2c2.Instance = I2C2;
+  hi2c2.Init.ClockSpeed = 100000;
+  hi2c2.Init.DutyCycle = I2C_DUTYCYCLE_2;
+  hi2c2.Init.OwnAddress1 = 0;
+  hi2c2.Init.AddressingMode = I2C_ADDRESSINGMODE_7BIT;
+  hi2c2.Init.DualAddressMode = I2C_DUALADDRESS_DISABLE;
+  hi2c2.Init.OwnAddress2 = 0;
+  hi2c2.Init.GeneralCallMode = I2C_GENERALCALL_DISABLE;
+  hi2c2.Init.NoStretchMode = I2C_NOSTRETCH_DISABLE;
+  if (HAL_I2C_Init(&hi2c2) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN I2C2_Init 2 */
+
+  /* USER CODE END I2C2_Init 2 */
+
 }
 
 /**
@@ -332,7 +414,7 @@ static void MX_GPIO_Init(void)
   /*Configure GPIO pins : LD2_Pin PA8 */
   GPIO_InitStruct.Pin = LD2_Pin|GPIO_PIN_8;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Pull = GPIO_PULLUP;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
