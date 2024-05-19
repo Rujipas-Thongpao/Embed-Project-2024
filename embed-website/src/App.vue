@@ -51,7 +51,7 @@ export default {
       temperatures: [],
       humidities:[],
       pressures:[],
-      z:0,
+      z:18,
       dataReadys: false
     }
   },
@@ -63,7 +63,7 @@ export default {
       this.temperatures.push(doc.data().temperature);
       this.pressures.push(doc.data().pressure);
       this.humidities.push(doc.data().humidity);
-      this.z = doc.data().z;
+      // this.z = doc.data().z;
       this.dataReady = true;
     });
   },

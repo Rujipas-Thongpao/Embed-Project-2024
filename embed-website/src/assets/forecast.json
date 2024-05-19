@@ -2,26 +2,161 @@
   {
     "id" : 1,
     "description" : "Settled Fine",
-    "imgPath" : "./logo.png"
+    "imgPath" : "d_01.png"
   },
   {
     "id" : 2,
-    "description" : "Settled Fine",
-    "imgPath" : "./logo.png"
+    "description" : "Fine Weather",
+    "imgPath" : "d_01.png"
   },
   {
     "id" : 3,
-    "description" : "Settled Fine",
-    "imgPath" : "./logo.png"
+    "description" : "Fine, Becoming Less Settled",
+    "imgPath" : "d_cloudy.png"
   },
   {
     "id" : 4,
-    "description" : "Settled Fine",
-    "imgPath" : "./logo.png"
+    "description" : "Fairly Fine, Showery Later",
+    "imgPath" : "d_cloudy.png"
   },
   {
     "id" : 5,
+    "description" : "Showery, Becoming More Unsettled",
+    "imgPath" : "showery.png"
+  },
+  {
+    "id" : 6,
+    "description" : "Unsettled, Rain Later",
+    "imgPath" : "d_more_cloudy.png"
+  },
+  {
+    "id" : 7,
+    "description" : "Rain at Times, Worse Later",
+    "imgPath" : "showery.png"
+  },
+  {
+    "id" : 8,
+    "description" : "Rain at Times, Becoming Very Unsettled",
+    "imgPath" : "showery.png"
+  },
+  {
+    "id" : 9,
+    "description" : "Very Unsettled, Rain",
+    "imgPath" : "cloud_rain.png"
+  },
+  {
+    "id" : 10,
     "description" : "Settled Fine",
-    "imgPath" : "./logo.png"
+    "imgPath" : "d_01.png"
+  },
+  {
+    "id" : 11,
+    "description" : "Fine Weather",
+    "imgPath" : "d_01.png"
+  },
+  {
+    "id" : 12,
+    "description" : "Fine, Possibly Showers",
+    "imgPath" : "d_cloudy.png"
+  },
+  {
+    "id" : 13,
+    "description" : "Fairly Fine, Showers Likely",
+    "imgPath" : "d_cloudy.png"
+  },
+  {
+    "id" : 14,
+    "description" : "Showery, Bright Intervals",
+    "imgPath" : "d_rain.png"
+  },
+  {
+    "id" : 15,
+    "description" : "Changeable, Some Rain",
+    "imgPath" : "d_rain.png"
+  },
+  {
+    "id" : 16,
+    "description" : "Unsettled, Rain at Times",
+    "imgPath" : "d_rain.png"
+  },
+  {
+    "id" : 17,
+    "description" : "Rain at Frequent Intervals",
+    "imgPath" : "d_rain.png"
+  },
+  {
+    "id" : 18,
+    "description" : "Very Unsettled, Rain",
+    "imgPath" : "rain.png"
+  },
+  {
+    "id" : 19,
+    "description" : "Stormy, Much Rain",
+    "imgPath" : "rain_storm.png"
+  },
+  {
+    "id" : 20,
+    "description" : "Settled Fine",
+    "imgPath" : "d_01.png"
+  },
+  {
+    "id" : 21,
+    "description" : "Fine Weather",
+    "imgPath" : "d_01.png"
+  },
+  {
+    "id" : 22,
+    "description" : "Becoming Fine",
+    "imgPath" : "d_cloudy.png"
+  },
+  {
+    "id" : 23,
+    "description" : "Fairly Fine, Improving",
+    "imgPath" : "d_cloudy.png"
+  },
+  {
+    "id" : 24,
+    "description" : "Fairly Fine, Possibly Showers Early",
+    "imgPath" : "d_cloudy.png"
+  },
+  {
+    "id" : 25,
+    "description" : "Showery Early, Improving",
+    "imgPath" : "wtf.png"
+  },
+  {
+    "id" : 26,
+    "description" : "Changeable, Mending",
+    "imgPath" : "wtf.png"
+  },
+  {
+    "id" : 27,
+    "description" : "Rather Unsettled, Clearing Later",
+    "imgPath" : "idk.png"
+  },
+  {
+    "id" : 28,
+    "description" : "Unsettled, Probably Improving",
+    "imgPath" : "idk.png"
+  },
+  {
+    "id" : 29,
+    "description" : "Unsettled, Short Fine Intervals",
+    "imgPath" : "idk.png"
+  },
+  {
+    "id" : 30,
+    "description" : "Very Unsettled, Finer at Times",
+    "imgPath" : "d_more_cloudy.png"
+  },
+  {
+    "id" : 31,
+    "description" : "Stormy, Possibly Improving",
+    "imgPath" : "rain_storm.png"
+  },
+  {
+    "id" : 32,
+    "description" : "Stormy, Much Rain",
+    "imgPath" : "rain_storm.png"
   }
 ]
