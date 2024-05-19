@@ -70,17 +70,17 @@ static void MX_I2C2_Init(void);
 
 BMP280_HandleTypedef bmp280;
 
-float pressure, temperature, humidity;
-
-uint16_t size;
-uint8_t Data[256];
+float BMP_pressure, BMP_temperature, BMP_humidity;
 
 /* DEFINE THE DHT DataTypedef
 * Look in the DHT.h for the definition
 */
 DHT_DataTypedef DHT22_Data;
 float DHT_temperature, DHT_humidity;
-char uartData[50];
+char uartData[256];
+
+float cur_pressure, cur_temperature, cur_humidity = 0;
+float prev_pressure, prev_temperature, prev_humidity = 0;
 
 void SendDataToNodeMCU() {
 	// Send Code through UART
@@ -128,13 +128,14 @@ int main(void)
   	bmp280.i2c = &hi2c2;
 
   	while (!bmp280_init(&bmp280, &bmp280.params)) {
-  		size = sprintf((char *)Data, "BMP280 initialization failed\r\n");
-  		HAL_UART_Transmit(&huart2, Data, size, 1000);
+  		sprintf(uartData, "BMP280 initialization failed\r\n");
+  		HAL_UART_Transmit(&huart2, (uint8_t *)uartData, strlen(uartData), 1000);
   		HAL_Delay(2000);
   	}
   	bool bme280p = bmp280.id == BME280_CHIP_ID;
-  	size = sprintf((char *)Data, "BMP280: found %s\r\n", bme280p ? "BME280" : "BMP280");
-  	HAL_UART_Transmit(&huart2, Data, size, 1000);
+  	sprintf(uartData, "\r\nBMP280: found %s\r\n", bme280p ? "BME280" : "BMP280");
+  	HAL_UART_Transmit(&huart2, (uint8_t *)uartData, strlen(uartData), 1000);
+	HAL_Delay(1000); // WAIT
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -145,35 +146,41 @@ int main(void)
 
     /* USER CODE BEGIN 3 */
 
+	HAL_GPIO_WritePin(GPIOA, GPIO_PIN_5, GPIO_PIN_SET);
+
 	// GET DATA FROM DHT22
+	sprintf(uartData, "\r\nDHT22 Sensor:\r\n");
+	HAL_UART_Transmit(&huart2, (uint8_t *)uartData, strlen(uartData), 1000);
 	DHT_GetData(&DHT22_Data);
   	DHT_temperature = DHT22_Data.Temperature/10;
 	DHT_humidity = DHT22_Data.Humidity/10;
-	sprintf(uartData, "\r\nTemp (C) =\t %.1f\r\nHumidity (%%) =\t %.1f%%\r\n", DHT_temperature, DHT_humidity);
-	HAL_UART_Transmit(&huart2, (uint8_t *)uartData, strlen(uartData), 10);
+	sprintf(uartData, "Temp (C) =\t %.1f\r\nHumidity (%%) =\t %.1f%%\r\n", DHT_temperature, DHT_humidity);
+	HAL_UART_Transmit(&huart2, (uint8_t *)uartData, strlen(uartData), 1000);
 
-//	HAL_Delay(1000); // WAIT
-//
-//	// GET DATA FROM BMP-280
-//	while (!bmp280_read_float(&bmp280, &temperature, &pressure, &humidity)) {
-//		size = sprintf((char *)Data,
-//				"Temperature/pressure reading failed\r\n");
-//		HAL_UART_Transmit(&huart2, Data, size, 1000);
-//		HAL_Delay(2000);
-//	}
-//
-//	size = sprintf((char *)Data,"Pressure: %.2f Pa, Temperature: %.2f C",
-//			pressure, temperature);
-//	HAL_UART_Transmit(&huart2, Data, size, 1000);
-//	if (bme280p) {
-//		size = sprintf((char *)Data,", Humidity: %.2f\r\n", humidity);
-//		HAL_UART_Transmit(&huart2, Data, size, 1000);
-//	}
-//
-//	else {
-//		size = sprintf((char *)Data, "\r\n");
-//		HAL_UART_Transmit(&huart2, Data, size, 1000);
-//	}
+	HAL_Delay(1000); // WAIT
+
+	// GET DATA FROM BMP-280
+	sprintf(uartData, "BMP-280 Sensor:\r\n");
+	HAL_UART_Transmit(&huart2, (uint8_t *)uartData, strlen(uartData), 1000);
+	while (!bmp280_read_float(&bmp280, &BMP_temperature, &BMP_pressure, &BMP_humidity)) {
+		sprintf(uartData, "Temperature/pressure reading failed\r\n");
+		HAL_UART_Transmit(&huart2, (uint8_t *)uartData, strlen(uartData), 1000);
+		HAL_Delay(2000);
+	}
+
+	sprintf(uartData, "Pressure: %.2f Pa, Temperature: %.2f C", BMP_pressure, BMP_temperature);
+	HAL_UART_Transmit(&huart2, (uint8_t *)uartData, strlen(uartData), 1000);
+	if (bme280p) {
+		sprintf(uartData, ", Humidity: %.2f\r\n", BMP_humidity);
+		HAL_UART_Transmit(&huart2, (uint8_t *)uartData, strlen(uartData), 1000);
+	}
+
+	else {
+		sprintf((char *)uartData, "\r\n");
+		HAL_UART_Transmit(&huart2, (uint8_t *)uartData, strlen(uartData), 1000);
+	}
+
+	HAL_GPIO_WritePin(GPIOA, GPIO_PIN_5, GPIO_PIN_RESET);
 
 	SendDataToNodeMCU();
 	HAL_Delay(3000);
