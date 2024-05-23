@@ -24,7 +24,7 @@ This project demonstrates how to set up an ESP8266 microcontroller to read data 
 ## Project Setup
 
 ### Hardware Connections
-
+![Untitled](https://prod-files-secure.s3.us-west-2.amazonaws.com/85d575b5-7476-4c27-a2aa-1fb751b9e9a4/8179e881-40d4-4945-af96-c33f7706cc5c/Untitled.png)
 1. Connect the STM32 to the ESP8266 via UART.
 2. Use `D7` as Rx and `D8` as Tx for the ESP8266.
 
