@@ -215,6 +215,23 @@ void SendDataToNodeMCU() {
 	int temperature_after_decimal = (int) (100
 			* (cur_temperature - temperature_before_decimal));
 
+<<<<<<< HEAD
+	// TODO after known the protocol
+	// Send Code through UART
+	// string code = ... TempC ... Humidity
+	//HAL_UART_Transmit(&huart1, &code, 1, 1000);
+
+	// Decompose dustval to string (sprintf won't work with float)
+	int pressure_before_decimal = (int) cur_pressure;
+	int pressure_after_decimal = (int) (100
+			* (cur_pressure - pressure_before_decimal));
+
+	int temperature_before_decimal = (int) cur_temperature;
+	int temperature_after_decimal = (int) (100
+			* (cur_temperature - temperature_before_decimal));
+
+=======
+>>>>>>> 00ac5a7882d73016e3e9485bf09bb72bb9b62a33
 	int humidity_before_decimal = (int) cur_humidity;
 	int humidity_after_decimal = (int) (100
 			* (cur_humidity - humidity_before_decimal));
@@ -224,6 +241,18 @@ void SendDataToNodeMCU() {
 			temperature_after_decimal, humidity_before_decimal,
 			humidity_after_decimal, z);
 	//dummy
+<<<<<<< HEAD
+//		sprintf(pmbuffer, "s1.2,3.4,5.67,20\n");
+	// Transmit the message to ESP8266 in the correct format
+	HAL_UART_Transmit(&huart1, (uint8_t*) pmbuffer, strlen(pmbuffer),
+	HAL_MAX_DELAY);
+
+	// uncomment to debug (print the sent message to console (baudrate=115200))
+	HAL_UART_Transmit(&huart2, (uint8_t*) pmbuffer, strlen(pmbuffer),
+	HAL_MAX_DELAY);
+
+
+=======
 	//	sprintf(pmbuffer, "s1.2,3.4,5.67,20e");
 	// Transmit the message to ESP8266 in the correct format
 	HAL_UART_Transmit(&huart1, (uint8_t*) nodemcu_buffer, strlen(nodemcu_buffer),
@@ -235,6 +264,7 @@ void SendDataToNodeMCU() {
 	sprintf(uartData, "\r\n===============\r\nmessage = %s\r===============\r\n", nodemcu_buffer);
 	HAL_UART_Transmit(&huart2, (uint8_t*) uartData, strlen(uartData),
 	HAL_MAX_DELAY);
+>>>>>>> 00ac5a7882d73016e3e9485bf09bb72bb9b62a33
 }
 
 /* USER CODE END 0 */

@@ -56,8 +56,8 @@ char msg[150];
 int i = 0;
 
 double pressure_raw = 0;
-double humidity_raw = 0;
 double temperature_raw = 0;
+double humidity_raw = 0;
 int z_raw = 0;
 
 void processMessage(char* message) {
@@ -65,18 +65,19 @@ void processMessage(char* message) {
   Serial.print("Received Message: ");
   Serial.println(message);
 
-  sscanf(message, "s%lf,%lf,%lf,%d", &pressure_raw, &humidity_raw, &temperature_raw, &z_raw);
+  sscanf(message, "s%lf,%lf,%lf,%d", &pressure_raw, &temperature_raw, &humidity_raw, &z_raw);
   // uncomment to debug (print data from message after factoring into variables)
-  Serial.print("Received Numbers: ");
+  Serial.print("Received Numbers: P:");
   Serial.print(pressure_raw);
-  Serial.print(", ");
-  Serial.print(humidity_raw);
-  Serial.print(", ");
+  Serial.print(", T:");
   Serial.print(temperature_raw);
-  Serial.print(", ");
+  Serial.print(", H:");
+  Serial.print(humidity_raw);
+  Serial.print(", Z:");
   Serial.print(z_raw);
   Serial.print("--\n");
-  sendDataToFireStore(pressure_raw, humidity_raw, temperature_raw, z_raw);
+
+  sendDataToFireStore(pressure_raw, temperature_raw, humidity_raw, z_raw);
 }
 
 /* defining the UART Port END */
@@ -169,6 +170,7 @@ void loop() {
 
   if (stmPort.available()) {
     Serial.println("starting transmissiom...");
+    Serial.println(i);
     while (stmPort.available()) {
       char c = (char)stmPort.read();
       //uncomment to debug (print data from stm32 board)
@@ -179,12 +181,12 @@ void loop() {
       // }
       msg[i++] = c;
       if (i == 150) {
-        Serial.println("i==150");
+        Serial.println("i == 150");
         i = 0;
         break;
       }
       if (c == '\n') {
-        Serial.println("i==nnnn");
+        Serial.println("i==\n");
         msg[i] = '\0';
         processMessage(msg);
         i = 0;
@@ -195,7 +197,6 @@ void loop() {
   // if (app.ready() && millis() - lastSend >= 30000 || lastSend == 0) {
   //   lastSend = millis();
 
-  //   sendDataToFireStore(DOCUMENT_PATH, 10.5, 20.1, 30.5, 1);
   // }
 
 
@@ -203,14 +204,14 @@ void loop() {
   //Asycn callback printing for the sended Data status
 }
 
-void sendDataToFireStore(double pressure_val, double humidity_val, double temperature_val, int z_val) {
+void sendDataToFireStore(double pressure_val, double temperature_val, double humidity_val, int z_val) {
   if (app.ready()) {
 
     String DOCUMENT_PATH = "sensor_data/d" + String(random(30000));
 
     Values::DoubleValue pressure(pressure_val);
-    Values::DoubleValue humidity(humidity_val);
     Values::DoubleValue temperature(temperature_val);
+    Values::DoubleValue humidity(humidity_val);
     Values::IntegerValue z(z_val);
     Values::IntegerValue date(time(nullptr));
 
