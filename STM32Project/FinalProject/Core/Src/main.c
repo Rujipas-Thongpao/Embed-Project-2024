@@ -52,6 +52,7 @@ UART_HandleTypeDef huart1;
 UART_HandleTypeDef huart2;
 
 osThreadId UARTToNodeHandle;
+osThreadId getDataTaskHandle;
 /* USER CODE BEGIN PV */
 
 #define ALTITUDE 3.6; //height from sea level in meter
@@ -65,6 +66,7 @@ static void MX_USART1_UART_Init(void);
 static void MX_TIM3_Init(void);
 static void MX_I2C2_Init(void);
 void SendDataToNodeThread(void const *argument);
+void GetDataFromSensor(void const *argument);
 
 /* USER CODE BEGIN PFP */
 
@@ -93,6 +95,7 @@ float DHT_temperature, DHT_humidity;
 
 float cur_pressure, cur_temperature, cur_humidity = 0;
 float prev_pressure, prev_temperature, prev_humidity = 0;
+uint8_t z; // Prediction value
 
 void ReadDataFromSensors() {
 	// Set LED for Debugging
@@ -172,19 +175,17 @@ void ProcessData() {
 	double temp2 = pow(temp1, -5.257);
 	double p0 = cur_pressure / 100 * temp2;
 
-	uint8_t z; // Prediction value
-
 	// Pressure is Rising
-	if (cur_pressure > prev_pressure) {
-		z = 130 - p0 / 81;
+	if (cur_pressure > prev_pressure + 1.6) {
+		z = 185 - 0.16 * p0;
 	}
 	// Pressure is Falling
-	else if (cur_pressure < prev_pressure) {
-		z = 147 - 5 * p0 / 376;
+	else if (cur_pressure < prev_pressure - 1.6) {
+		z = 127 - 0.12 * p0;
 	}
 	// Pressure is Steady
 	else {
-		z = 179 - 2 * p0 / 129;
+		z = 144 - 0.13 * p0;
 	}
 
 	// TODO Adjust Z value
@@ -288,6 +289,10 @@ int main(void) {
 	osThreadDef(UARTToNode, SendDataToNodeThread, osPriorityNormal, 0, 128);
 	UARTToNodeHandle = osThreadCreate(osThread(UARTToNode), NULL);
 
+	/* definition and creation of getDataTask */
+	osThreadDef(getDataTask, GetDataFromSensor, osPriorityIdle, 0, 128);
+	getDataTaskHandle = osThreadCreate(osThread(getDataTask), NULL);
+
 	/* USER CODE BEGIN RTOS_THREADS */
 	/* add threads, ... */
 	/* USER CODE END RTOS_THREADS */
@@ -302,13 +307,11 @@ int main(void) {
 		/* USER CODE END WHILE */
 
 		/* USER CODE BEGIN 3 */
-		ReadDataFromSensors();
-		ProcessData();
 
 //		SendDataToNodeMCU();
-		sprintf(uartData, "while\r\n");
-		HAL_UART_Transmit(&huart2, (uint8_t*) uartData, strlen(uartData), 1000);
-		HAL_Delay(3000);
+//		sprintf(uartData, "while\r\n");
+//		HAL_UART_Transmit(&huart2, (uint8_t*) uartData, strlen(uartData), 1000);
+//		HAL_Delay(2000);
 	}
 	/* USER CODE END 3 */
 }
@@ -555,13 +558,13 @@ void SendDataToNodeThread(void const *argument) {
 	/* USER CODE BEGIN 5 */
 	/* Infinite loop */
 	for (;;) {
-		sprintf(uartData, "nok if\r\n");
-		HAL_UART_Transmit(&huart2, (uint8_t*) uartData, strlen(uartData), 1000);
-
-//		if (cur_pressure != 0 && cur_temperature != 0 && cur_humidity != 0) {
-
-		sprintf(uartData, "nai if\r\n");
-		HAL_UART_Transmit(&huart2, (uint8_t*) uartData, strlen(uartData), 1000);
+//		sprintf(uartData, "nok if\r\n");
+//		HAL_UART_Transmit(&huart2, (uint8_t*) uartData, strlen(uartData), 1000);
+//
+////		if (cur_pressure != 0 && cur_temperature != 0 && cur_humidity != 0) {
+//
+//		sprintf(uartData, "nai if\r\n");
+//		HAL_UART_Transmit(&huart2, (uint8_t*) uartData, strlen(uartData), 1000);
 		/* Call read_PM25_sensor every 15 seconds */
 		/* Then send all datas to ESP8266 is the format "s{dustval},{latval},{latdir},{lonval},{londir}"  (s to indicate the start of the data)*/
 
@@ -578,19 +581,19 @@ void SendDataToNodeThread(void const *argument) {
 		int humidity_after_decimal = (int) (100
 				* (cur_humidity - humidity_before_decimal));
 
-//			sprintf(pmbuffer, "s%d.%d,%d.%d,%d.%d,20\n", pressure_before_decimal,
-//					pressure_after_decimal, temperature_before_decimal,
-//					temperature_after_decimal, humidity_before_decimal,
-//					humidity_after_decimal);
+		sprintf(pmbuffer, "s%d.%d,%d.%d,%d.%d,%d\n", pressure_before_decimal,
+				pressure_after_decimal, temperature_before_decimal,
+				temperature_after_decimal, humidity_before_decimal,
+				humidity_after_decimal, z);
 		//dummy
-		sprintf(pmbuffer, "s1.2,3.4,5.67,20\n");
+//		sprintf(pmbuffer, "s1.2,3.4,5.67,20\n");
 		// Transmit the message to ESP8266 in the correct format
 		HAL_UART_Transmit(&huart1, (uint8_t*) pmbuffer, strlen(pmbuffer),
 		HAL_MAX_DELAY);
 
 		// uncomment to debug (print the sent message to console (baudrate=115200))
 		HAL_UART_Transmit(&huart2, (uint8_t*) pmbuffer, strlen(pmbuffer),
-				HAL_MAX_DELAY);
+		HAL_MAX_DELAY);
 
 //		}
 		osDelay(20000);
@@ -599,17 +602,36 @@ void SendDataToNodeThread(void const *argument) {
 }
 /* USER CODE END 5 */
 
+
+/* USER CODE BEGIN Header_GetDataFromSensor */
+/**
+ * @brief Function implementing the getDataTask thread.
+ * @param argument: Not used
+ * @retval None
+ */
+/* USER CODE END Header_GetDataFromSensor */
+void GetDataFromSensor(void const *argument) {
+/* USER CODE BEGIN GetDataFromSensor */
+/* Infinite loop */
+for (;;) {
+	ReadDataFromSensors();
+	ProcessData();
+	osDelay(4000);
+}
+/* USER CODE END GetDataFromSensor */
+}
+
 /**
  * @brief  This function is executed in case of error occurrence.
  * @retval None
  */
 void Error_Handler(void) {
-	/* USER CODE BEGIN Error_Handler_Debug */
-	/* User can add his own implementation to report the HAL error return state */
-	__disable_irq();
-	while (1) {
-	}
-	/* USER CODE END Error_Handler_Debug */
+/* USER CODE BEGIN Error_Handler_Debug */
+/* User can add his own implementation to report the HAL error return state */
+__disable_irq();
+while (1) {
+}
+/* USER CODE END Error_Handler_Debug */
 }
 
 #ifdef  USE_FULL_ASSERT
