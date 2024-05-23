@@ -75,7 +75,7 @@ void sendDataToFireStore(double pressure_val, double temperature_val, double hum
 void printResult(AsyncResult& aResult);
 
 DefaultNetwork network;  // initilize with boolean parameter to enable/disable network reconnection
-  
+
 UserAuth user_auth(API_KEY, USER_EMAIL, USER_PASSWORD);
 
 FirebaseApp app;  // defining Firebase as app
@@ -221,7 +221,7 @@ void sendDataToFireStore(double pressure_val, double temperature_val, double hum
   //check if FirebaseApp is ready or not
   if (app.ready()) {
 
-    String DOCUMENT_PATH = "sensor_data/d" + String(random(30000));
+    String DOCUMENT_PATH = "sensor_data/d" + String(random(9000000));
 
     /* format the sensor data */
     Values::DoubleValue pressure(pressure_val);
