@@ -93,8 +93,8 @@ uint8_t z; // Prediction value
 
 uint32_t lastReadSensorTick = 0;
 uint32_t readSensorInterval = 4000;
-uint32_t lastSendDataTick = 4000;
-uint32_t sendDataInterval = 10000;
+uint32_t lastSendDataTick = 0;
+uint32_t sendDataInterval = 30000;
 
 void ReadDataFromSensors() {
 	// Set LED for Debugging
@@ -221,12 +221,12 @@ void SendDataToNodeMCU() {
 	int humidity_after_decimal = (int) (100
 			* (cur_humidity - humidity_before_decimal));
 
-//	sprintf(pmbuffer, "s%d.%d,%d.%d,%d.%d,%d\n", pressure_before_decimal,
-//			pressure_after_decimal, temperature_before_decimal,
-//			temperature_after_decimal, humidity_before_decimal,
-//			humidity_after_decimal, z);
+	sprintf(pmbuffer, "s%d.%d,%d.%d,%d.%d,%d\n", pressure_before_decimal,
+			pressure_after_decimal, temperature_before_decimal,
+			temperature_after_decimal, humidity_before_decimal,
+			humidity_after_decimal, z);
 	//dummy
-		sprintf(pmbuffer, "s1.2,3.4,5.67,20e");
+	//	sprintf(pmbuffer, "s1.2,3.4,5.67,20e");
 	// Transmit the message to ESP8266 in the correct format
 	HAL_UART_Transmit(&huart1, pmbuffer, strlen(pmbuffer),
 	HAL_MAX_DELAY);
@@ -296,11 +296,11 @@ int main(void)
     /* USER CODE BEGIN 3 */
 		uint32_t currentTick = HAL_GetTick();
 
-//		if(currentTick - lastReadSensorTick >= readSensorInterval){
-//			ReadDataFromSensors();
-//			ProcessData();
-//			lastReadSensorTick = currentTick;
-//		}
+		if(currentTick - lastReadSensorTick >= readSensorInterval){
+			ReadDataFromSensors();
+			ProcessData();
+			lastReadSensorTick = currentTick;
+		}
 
 		if(currentTick - lastSendDataTick >= sendDataInterval){
 			// Send Data to NodeMCU
@@ -410,7 +410,7 @@ static void MX_TIM3_Init(void)
 
   /* USER CODE END TIM3_Init 1 */
   htim3.Instance = TIM3;
-  htim3.Init.Prescaler = 100-1;
+  htim3.Init.Prescaler = 50-1;
   htim3.Init.CounterMode = TIM_COUNTERMODE_UP;
   htim3.Init.Period = 65535;
   htim3.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
