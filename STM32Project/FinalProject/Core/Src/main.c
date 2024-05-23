@@ -70,7 +70,7 @@ static void MX_I2C2_Init(void);
 /* USER CODE BEGIN 0 */
 char uartData[256];
 
-char pmbuffer[150];
+char nodemcu_buffer[150];
 
 float altitude = ALTITUDE
 ;
@@ -187,10 +187,8 @@ void ProcessData() {
 		z = 144 - 0.13 * p0;
 	}
 
-	// TODO Adjust Z value
-
-	sprintf(uartData, "\r\nDEBUG: %f %f %f\r\n", temp1, temp2, p0);
-	HAL_UART_Transmit(&huart2, (uint8_t*) uartData, strlen(uartData), 1000);
+//	sprintf(uartData, "\r\nDEBUG: %f %f %f\r\n", temp1, temp2, p0);
+//	HAL_UART_Transmit(&huart2, (uint8_t*) uartData, strlen(uartData), 1000);
 
 	sprintf(uartData, "\r\nForecast Number = %d\r\n", z);
 	HAL_UART_Transmit(&huart2, (uint8_t*) uartData, strlen(uartData), 1000);
@@ -238,7 +236,7 @@ void SendDataToNodeMCU() {
 	int humidity_after_decimal = (int) (100
 			* (cur_humidity - humidity_before_decimal));
 
-	sprintf(pmbuffer, "s%d.%d,%d.%d,%d.%d,%d\n", pressure_before_decimal,
+	sprintf(nodemcu_buffer, "s%d.%d,%d.%d,%d.%d,%d\n", pressure_before_decimal,
 			pressure_after_decimal, temperature_before_decimal,
 			temperature_after_decimal, humidity_before_decimal,
 			humidity_after_decimal, z);
@@ -257,13 +255,14 @@ void SendDataToNodeMCU() {
 =======
 	//	sprintf(pmbuffer, "s1.2,3.4,5.67,20e");
 	// Transmit the message to ESP8266 in the correct format
-	HAL_UART_Transmit(&huart1, pmbuffer, strlen(pmbuffer),
+	HAL_UART_Transmit(&huart1, (uint8_t*) nodemcu_buffer, strlen(nodemcu_buffer),
 	HAL_MAX_DELAY);
 
 	HAL_Delay(500);
 
 	// uncomment to debug (print the sent message to console (baudrate=115200))
-	HAL_UART_Transmit(&huart2, (uint8_t*) pmbuffer, strlen(pmbuffer),
+	sprintf(uartData, "\r\n===============\r\nmessage = %s\r===============\r\n", nodemcu_buffer);
+	HAL_UART_Transmit(&huart2, (uint8_t*) uartData, strlen(uartData),
 	HAL_MAX_DELAY);
 >>>>>>> 00ac5a7882d73016e3e9485bf09bb72bb9b62a33
 }
@@ -440,7 +439,7 @@ static void MX_TIM3_Init(void)
 
   /* USER CODE END TIM3_Init 1 */
   htim3.Instance = TIM3;
-  htim3.Init.Prescaler = 50-1;
+  htim3.Init.Prescaler = 100-1;
   htim3.Init.CounterMode = TIM_COUNTERMODE_UP;
   htim3.Init.Period = 65535;
   htim3.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
