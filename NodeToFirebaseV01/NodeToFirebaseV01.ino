@@ -22,7 +22,7 @@
 #include <sys/time.h>        // struct timeval
 #include <coredecls.h>       // settimeofday_cb()
 
-#define TZ -8      // (utc+) TZ in hours
+#define TZ +7      // (utc+) TZ in hours
 #define DST_MN 60  // use 60mn for summer time in some countries
 #define TZ_MN ((TZ)*60)
 #define TZ_SEC ((TZ)*3600)
@@ -62,12 +62,12 @@ int z_raw = 0;
 
 void processMessage(char* message) {
   // uncomment to debug (print data stored in message)
-  Serial.print("Received Message: ");
-  Serial.println(message);
+  // Serial.print("Received Message: ");
+  // Serial.println(message);
 
   sscanf(message, "s%lf,%lf,%lf,%d", &pressure_raw, &temperature_raw, &humidity_raw, &z_raw);
   // uncomment to debug (print data from message after factoring into variables)
-  Serial.print("Received Numbers: P:");
+  Serial.print("Received Numbers: \nP:");
   Serial.print(pressure_raw);
   Serial.print(", T:");
   Serial.print(temperature_raw);
@@ -75,7 +75,7 @@ void processMessage(char* message) {
   Serial.print(humidity_raw);
   Serial.print(", Z:");
   Serial.print(z_raw);
-  Serial.print("--\n");
+  Serial.print("\n");
 
   sendDataToFireStore(pressure_raw, temperature_raw, humidity_raw, z_raw);
 }
@@ -83,8 +83,6 @@ void processMessage(char* message) {
 /* defining the UART Port END */
 
 void printResult(AsyncResult& aResult);
-
-String getTimestampString(uint64_t sec, uint32_t nano);
 
 DefaultNetwork network;  // initilize with boolean parameter to enable/disable network reconnection
 
@@ -130,7 +128,7 @@ void setup() {
 
   WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
   Serial.print("\nConnecting to Wi-Fi\n");
-  unsigned long ms = millis();
+  // unsigned long ms = millis();
   while (WiFi.status() != WL_CONNECTED) {
     Serial.print(".");
     delay(300);
@@ -157,7 +155,7 @@ void setup() {
   app.getApp<Firestore::Documents>(Docs);
 }
 
-uint32_t lastSend = 0;
+// uint32_t lastSend = 0;
 
 void loop() {
 
@@ -170,23 +168,19 @@ void loop() {
 
   if (stmPort.available()) {
     Serial.println("starting transmissiom...");
-    Serial.println(i);
     while (stmPort.available()) {
       char c = (char)stmPort.read();
       //uncomment to debug (print data from stm32 board)
-      Serial.println(c);
+      // Serial.print(c);
 
-      // if (c > 'Z') {
-      //   continue;
-      // }
       msg[i++] = c;
       if (i == 150) {
-        Serial.println("i == 150");
+        Serial.println("End of Buffer Reached...Current Receiving loop terminated");
         i = 0;
         break;
       }
       if (c == '\n') {
-        Serial.println("i==\n");
+        Serial.println("Message received successfully (endline found.)");
         msg[i] = '\0';
         processMessage(msg);
         i = 0;
@@ -194,14 +188,8 @@ void loop() {
     }
   }
 
-  // if (app.ready() && millis() - lastSend >= 30000 || lastSend == 0) {
-  //   lastSend = millis();
-
-  // }
-
-
-  printResult(aResult_no_callback);
   //Asycn callback printing for the sended Data status
+  printResult(aResult_no_callback);
 }
 
 void sendDataToFireStore(double pressure_val, double temperature_val, double humidity_val, int z_val) {
@@ -210,19 +198,18 @@ void sendDataToFireStore(double pressure_val, double temperature_val, double hum
     String DOCUMENT_PATH = "sensor_data/d" + String(random(30000));
 
     Values::DoubleValue pressure(pressure_val);
+    Values::IntegerValue date(time(nullptr));
     Values::DoubleValue temperature(temperature_val);
     Values::DoubleValue humidity(humidity_val);
     Values::IntegerValue z(z_val);
-    Values::IntegerValue date(time(nullptr));
 
     Document<Values::Value> doc("pressure", Values::Value(pressure));
     doc.add("date", Values::Value(date));
-    doc.add("humidity", Values::Value(humidity));
     doc.add("temperature", Values::Value(temperature));
+    doc.add("humidity", Values::Value(humidity));
     doc.add("z", Values::Value(z));
 
     Serial.println("Create document... ");
-
     Docs.createDocument(aClient, Firestore::Parent(FIREBASE_PROJECT_ID), DOCUMENT_PATH, DocumentMask(), doc, aResult_no_callback);
   }
 }
@@ -244,52 +231,3 @@ void printResult(AsyncResult& aResult) {
     Firebase.printf("task: %s, payload: %s\n", aResult.uid().c_str(), aResult.c_str());
   }
 }
-
-String getTimestampString(uint64_t sec, uint32_t nano) {
-  if (sec > 0x3afff4417f)
-    sec = 0x3afff4417f;
-
-  if (nano > 0x3b9ac9ff)
-    nano = 0x3b9ac9ff;
-
-  time_t now;
-  struct tm ts;
-  char buf[80];
-  now = sec;
-  ts = *localtime(&now);
-
-  String format = "%Y-%m-%dT%H:%M:%S";
-
-  if (nano > 0) {
-    String fraction = String(double(nano) / 1000000000.0f, 9);
-    fraction.remove(0, 1);
-    format += fraction;
-  }
-  format += "Z";
-
-  strftime(buf, sizeof(buf), format.c_str(), &ts);
-  return buf;
-}
-
-
-/**
- * SYNTAX:
- *
- * Firestore::Documents::createDocument(<AsyncClient>, <Firestore::Parent>, <documentPath>, <DocumentMask>, <Document>, <AsyncResult>);
- *
- * Firestore::Documents::createDocument(<AsyncClient>, <Firestore::Parent>, <collectionId>, <documentId>, <DocumentMask>, <Document>, <AsyncResult>);
- *
- * <AsyncClient> - The async client.
- * <Firestore::Parent> - The Firestore::Parent object included project Id and database Id in its constructor.
- * <documentPath> - The relative path of document to create in the collection.
- * <DocumentMask> - The fields to return. If not set, returns all fields. Use comma (,) to separate between the field names.
- * <collectionId> - The document id of document to be created.
- * <documentId> - The relative path of document collection id to create the document.
- * <Document> - The Firestore document.
- * <AsyncResult> - The async result (AsyncResult).
- *
- * The Firebase project Id should be only the name without the firebaseio.com.
- * The Firestore database id should be (default) or empty "".
- *
- * The complete usage guidelines, please visit https://github.com/mobizt/FirebaseClient
- */
