@@ -49,35 +49,34 @@ void time_is_set(void) {
 
 #define FIREBASE_PROJECT_ID "embed-2024"
 
-
-String DOCUMENT_PATH = "sensor_data/d" + String(random(30000));
-
 /* defining the UART Port START */
 #include <SoftwareSerial.h>
 EspSoftwareSerial::UART stmPort;
 char msg[150];
 int i = 0;
 
+double pressure_raw = 0;
+double humidity_raw = 0;
+double temperature_raw = 0;
+int z_raw = 0;
+
 void processMessage(char* message) {
   // uncomment to debug (print data stored in message)
   Serial.print("Received Message: ");
   Serial.println(message);
 
-  float dustval, latval, lonval;
-  unsigned char latdir, londir;
-  sscanf(message, "%f,%f,%c,%f,%c", &dustval, &latval, &latdir, &lonval, &londir);
+  sscanf(message, "s%lf,%lf,%lf,%d", &pressure_raw, &humidity_raw, &temperature_raw, &z_raw);
   // uncomment to debug (print data from message after factoring into variables)
-  // Serial.print("Received Numbers: ");
-  // Serial.print(dustval);
-  // Serial.print(", ");
-  // Serial.print(latval);
-  // Serial.print(", ");
-  // Serial.print(latdir);
-  // Serial.print(", ");
-  // Serial.print(lonval);
-  // Serial.print(", ");
-  // Serial.println(londir);
-  sendDataToFireStore(DOCUMENT_PATH, 10.5, 20.1, 30.5, 1);
+  Serial.print("Received Numbers: ");
+  Serial.print(pressure_raw);
+  Serial.print(", ");
+  Serial.print(humidity_raw);
+  Serial.print(", ");
+  Serial.print(temperature_raw);
+  Serial.print(", ");
+  Serial.print(z_raw);
+  Serial.print("--\n");
+  sendDataToFireStore(pressure_raw, humidity_raw, temperature_raw, z_raw);
 }
 
 /* defining the UART Port END */
@@ -113,7 +112,13 @@ bool taskCompleted = false;
 int cnt = 0;
 
 void setup() {
-
+  stmPort.begin(115200, EspSoftwareSerial::SWSERIAL_8N1, D7, D8, false, 150, 150);
+  if (!stmPort) {  // If the object did not initialize, then its configuration is invalid
+    Serial.println("Invalid EspSoftwareSerial pin configuration, check config");
+    while (1) {  // Don't continue with invalid configuration
+      delay(1000);
+    }
+  }
   Serial.begin(115200);
 
   settimeofday_cb(time_is_set);
@@ -162,34 +167,63 @@ void loop() {
 
   Docs.loop();
 
+  if (stmPort.available()) {
+    Serial.println("starting transmissiom...");
+    while (stmPort.available()) {
+      char c = (char)stmPort.read();
+      //uncomment to debug (print data from stm32 board)
+      Serial.println(c);
 
-  if (app.ready() && millis() - lastSend >= 30000 || lastSend == 0) {
-    lastSend = millis();
-
-    sendDataToFireStore(DOCUMENT_PATH, 10.5, 20.1, 30.5, 1);
+      // if (c > 'Z') {
+      //   continue;
+      // }
+      msg[i++] = c;
+      if (i == 150) {
+        Serial.println("i==150");
+        i = 0;
+        break;
+      }
+      if (c == '\n') {
+        Serial.println("i==nnnn");
+        msg[i] = '\0';
+        processMessage(msg);
+        i = 0;
+      }
+    }
   }
 
-  //Asycn callback printing for the sended Data status
+  // if (app.ready() && millis() - lastSend >= 30000 || lastSend == 0) {
+  //   lastSend = millis();
+
+  //   sendDataToFireStore(DOCUMENT_PATH, 10.5, 20.1, 30.5, 1);
+  // }
+
+
   printResult(aResult_no_callback);
+  //Asycn callback printing for the sended Data status
 }
 
-void sendDataToFireStore(String documentPath_val, double pressure_val, double humidity_val, double temperature_val, int z_val) {
+void sendDataToFireStore(double pressure_val, double humidity_val, double temperature_val, int z_val) {
+  if (app.ready()) {
 
-  Values::DoubleValue pressure(pressure_val);
-  Values::DoubleValue humidity(humidity_val);
-  Values::DoubleValue temperature(temperature_val);
-  Values::IntegerValue z(z_val);
-  Values::IntegerValue date(time(nullptr));
+    String DOCUMENT_PATH = "sensor_data/d" + String(random(30000));
 
-  Document<Values::Value> doc("pressure", Values::Value(pressure));
-  doc.add("date", Values::Value(date));
-  doc.add("humidity", Values::Value(humidity));
-  doc.add("temperature", Values::Value(temperature));
-  doc.add("z", Values::Value(z));
+    Values::DoubleValue pressure(pressure_val);
+    Values::DoubleValue humidity(humidity_val);
+    Values::DoubleValue temperature(temperature_val);
+    Values::IntegerValue z(z_val);
+    Values::IntegerValue date(time(nullptr));
 
-  Serial.println("Create document... ");
+    Document<Values::Value> doc("pressure", Values::Value(pressure));
+    doc.add("date", Values::Value(date));
+    doc.add("humidity", Values::Value(humidity));
+    doc.add("temperature", Values::Value(temperature));
+    doc.add("z", Values::Value(z));
 
-  Docs.createDocument(aClient, Firestore::Parent(FIREBASE_PROJECT_ID), documentPath_val, DocumentMask(), doc, aResult_no_callback);
+    Serial.println("Create document... ");
+
+    Docs.createDocument(aClient, Firestore::Parent(FIREBASE_PROJECT_ID), DOCUMENT_PATH, DocumentMask(), doc, aResult_no_callback);
+  }
 }
 
 void printResult(AsyncResult& aResult) {
