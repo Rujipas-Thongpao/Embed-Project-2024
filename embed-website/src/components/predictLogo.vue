@@ -1,5 +1,5 @@
 <template>
-  <img :src="require(`../assets/weather_icons/${this.forecasts[this.z].imgPath}`)" />
+  <img width=400px height=auto class="shadow-lg rounded-circle m-4" :src="require(`../assets/weather_icons/${this.forecasts[this.z].imgPath}`)" />
   <h1> {{ this.forecasts[this.z].description }}</h1>
 </template>
 

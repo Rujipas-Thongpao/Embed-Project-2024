@@ -1,6 +1,17 @@
 <template>
-  <!-- <img alt="Vue logo" src="./assets/weather.webp" /> -->
-  <predictLogo :z = "this.z"/>
+  <nav class="navbar navbar-dark bg-primary p-2 shadow">
+    <div class="navbar-brand ">
+      <div class="row">
+        <div class="col">
+          <img src="./assets/weather-forecast.png" width=70px/>
+        </div>
+        <div class="col">
+          <H2 class="text-white mt-3">weather forecast</H2>
+        </div>
+      </div>
+    </div>
+  </nav>
+  <predictLogo :z = "this.z" />
   <div class="container">
     <div class="row ">
       <div class="col">
@@ -16,7 +27,7 @@
             imageUrl="pressure.png"
             title="Pressure"
             :values="this.pressures"
-            unit="hPa"
+            unit="Pa"
         />
       </div>
       <div class="col">
@@ -51,19 +62,19 @@ export default {
       temperatures: [],
       humidities:[],
       pressures:[],
-      z:18,
+      z:0,
       dataReadys: false
     }
   },
   async mounted(){
-    const colref = await collection(db, "data");
+    const colref = await collection(db, "sensor_data");
     const q = query(colref, orderBy("date","desc"), limit(5));
     const querySnapshot = await getDocs(q);
     querySnapshot.forEach((doc) => {
       this.temperatures.push(doc.data().temperature);
       this.pressures.push(doc.data().pressure);
       this.humidities.push(doc.data().humidity);
-      // this.z = doc.data().z;
+      this.z = doc.data().z;
       this.dataReady = true;
     });
   },
@@ -74,6 +85,5 @@ export default {
 #app {
   font-family: Avenir, Helvetica, Arial, sans-serif;
   text-align: center;
-  margin: 60px;
 }
 </style>

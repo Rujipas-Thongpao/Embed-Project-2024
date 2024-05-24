@@ -1,5 +1,5 @@
 <template>
-  <div class="p-3 m-3 row bg-light rounded-3" >
+  <div class="shadow p-3 m-3 row bg-light rounded-3" >
     <div class="col">
         <img class="rounded float-left mr-3" :src="require(`../assets/${imageUrl}`)" style="width: 100px" />
     </div>
@@ -26,11 +26,6 @@ export default {
   components:{
     LineChart
   },
-  // data () {
-  //   return {
-  //     somevar :this.values
-  //   }
-  // },
   props: {
     imageUrl: {
       type: String,
