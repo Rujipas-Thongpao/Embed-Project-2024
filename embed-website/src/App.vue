@@ -77,6 +77,9 @@ export default {
       this.z = doc.data().z;
       this.dataReady = true;
     });
+    this.temperatures.reverse();
+    this.humidities.reverse();
+    this.pressures.reverse();
   },
 };
 </script>
