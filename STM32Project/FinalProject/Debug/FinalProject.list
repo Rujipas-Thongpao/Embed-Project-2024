@@ -4068,7 +4068,6 @@ void SendDataToNodeMCU() {
  80025f4:	eefd 7ae7 	vcvt.s32.f32	s15, s15
  80025f8:	ee17 3a90 	vmov	r3, s15
  80025fc:	60bb      	str	r3, [r7, #8]
-
 	int humidity_before_decimal = (int) cur_humidity;
  80025fe:	4b2a      	ldr	r3, [pc, #168]	; (80026a8 <SendDataToNodeMCU+0x11c>)
  8002600:	edd3 7a00 	vldr	s15, [r3]
