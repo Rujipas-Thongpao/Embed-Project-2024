@@ -175,16 +175,25 @@ void ProcessData() {
 	double p0 = cur_pressure / 100 * temp2;
 
 	// Pressure is Rising
-	if (cur_pressure > prev_pressure + 1.6) {
+	if (cur_pressure > prev_pressure + 160) {
 		z = 185 - 0.16 * p0;
 	}
 	// Pressure is Falling
-	else if (cur_pressure < prev_pressure - 1.6) {
+	else if (cur_pressure < prev_pressure - 160) {
 		z = 127 - 0.12 * p0;
 	}
 	// Pressure is Steady
 	else {
 		z = 144 - 0.13 * p0;
+	}
+
+	if(cur_humidity > 80.0)
+	{
+		z += 2;
+	}
+	else if(cur_humidity > 55.0)
+	{
+		z += 1;
 	}
 
 //	sprintf(uartData, "\r\nDEBUG: %f %f %f\r\n", temp1, temp2, p0);
