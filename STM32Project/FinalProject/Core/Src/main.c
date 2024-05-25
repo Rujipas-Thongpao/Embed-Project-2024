@@ -52,7 +52,7 @@ UART_HandleTypeDef huart2;
 
 /* USER CODE BEGIN PV */
 
-#define ALTITUDE 3.6; //height from sea level in meter
+#define ALTITUDE 100; //height from sea level in meter
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
