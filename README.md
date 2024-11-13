@@ -1,6 +1,6 @@
 ![image](https://github.com/user-attachments/assets/882c24e4-308d-4591-bd62-d5b2a68c2c85)
 # Project Description
-This project is an embedded system for weather forecasting using the STM32 microcontroller as the main board. It utilizes two sensors, DHT22 (for temperature and humidity) and BMP280 (for pressure), to collect environmental data. The data is sent to a Firebase Firestore database via the NodeMCU (ESP8266) module. The system uses the Zambretti Algorithm for forecasting weather conditions, and the data visualization is implemented using Vue.js for real-time weather monitoring.
+This project is an embedded system for weather forecasting using the STM32 microcontroller as the main board. It utilizes two sensors, DHT22 (for temperature and humidity) and BMP280 (for pressure), to collect environmental data. The data is sent to a Firebase Firestore database via the NodeMCU (ESP8266) module. The system uses the Zambretti Algorithm for forecasting weather conditions, and the data visualization is implemented using Vue.js for real-time weather monitoring
 
 # Components Used:
 - STM32 Microcontroller: Main processing unit.
